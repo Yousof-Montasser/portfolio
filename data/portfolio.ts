@@ -53,7 +53,7 @@ export const PROFILE = {
   location: "Cairo, Egypt",
   headline: "Building production AI systems that remain reliable when models are wrong.",
   summary:
-    "AI Engineer with hands-on experience designing, building, and deploying production AI systems end-to-end. Specializes in building deterministic validation layers around probabilistic models, real-time computer vision pipelines, on-premise RAG/agent architectures, and resilient backend services on AWS.",
+    "AI Engineer with hands-on experience designing, building, and deploying production AI systems end-to-end. Specializes in building deterministic validation layers around probabilistic models, real-time computer vision pipelines, on-premise RAG architectures, and resilient backend services on AWS.",
   philosophy: {
     corePrinciple: "The component will fail, so design the system so failure does not matter.",
     thesis:
@@ -68,7 +68,7 @@ export const PROFILE = {
       {
         title: "The LLM Proposes, The Runtime Enforces",
         description:
-          "In agentic workflows, prompts guide intent, but deterministic code polices safety. Destructive actions, state mutations, and external API calls must require deterministic confirmation gates and strict schema validation rather than relying on system prompt compliance.",
+          "In agentic workflows, prompts guide intent, but deterministic code polices safety. Destructive actions, state mutations, and external API calls must require deterministic confirmation tokens and strict schema validation rather than relying on system prompt compliance.",
         tag: "Agent Safety",
       },
       {
@@ -106,69 +106,69 @@ export const PROJECTS: Project[] = [
     metrics: [
       { label: "Throughput", value: "50 fps @ 10k bitrate" },
       { label: "Positional Accuracy", value: "80% → ~100%" },
+      { label: "Damaged Read Recovery", value: "32 of 33 Recovered" },
       { label: "Analyst Time Saved", value: "1–2 days / mission" },
-      { label: "Protocol", value: "WinTAK Cursor-on-Target" },
     ],
     problem:
-      "Extracting flight and sensor telemetry (GPS coordinates, azimuth, heading) from FLIR HUD video feeds in real time. At 50 frames per second, even a 95% accurate OCR model yields several erroneous readings every second. A single corrupted digit causes erratic jumps on tactical mission maps, destroying operator trust.",
+      "Extracting flight and sensor telemetry (GPS coordinates, azimuth, heading) from FLIR HUD video feeds in real time. At 50 frames per second, even a 95% accurate OCR model yields multiple visible errors every second. Glare, motion blur, and dropped hemisphere indicators cause erratic coordinate jumps on tactical mission maps, destroying operator trust.",
     architecture: {
       stages: [
         {
           step: 1,
-          name: "Video Ingestion",
-          description: "High-bitrate FLIR HUD video feed ingestion at 50fps / 10k bitrate.",
+          name: "Video Ingestion & Crop Isolation",
+          description: "Recognition-only OCR over calibrated ROI crops, bypassing full-frame detection to cut pass latency by 4x (~2.2s to ~0.57s).",
         },
         {
           step: 2,
-          name: "OCR Extraction",
-          description: "Bounding box isolation and optical character recognition for coordinates and heading.",
+          name: "Multiprocessing Isolation",
+          description: "CPU-bound OCR runs in a decoupled process across IPC queues, guaranteeing zero GUI frame drops at native frame rates.",
         },
         {
           step: 3,
-          name: "Kalman Validation",
-          description: "Kinematic prediction cross-checks OCR against physically plausible trajectories.",
-          badge: "Verification Gate",
+          name: "DMS Parsing & Structure Repair",
+          description: "Strict DD°MM'SS.ss\" syntax enforcement recovers dropped hemisphere characters (W/E) and eliminates stray period artifacts.",
+          badge: "Syntax Repair",
           isValidation: true,
         },
         {
           step: 4,
-          name: "Error Compensation",
-          description: "Out-of-range OCR readings are rejected; state is dynamically substituted with Kalman estimates.",
-          badge: "Fallback Path",
+          name: "Kalman Kinematic Gate",
+          description: "State prediction cross-checks readings against physical flight envelopes; out-of-range readings are rejected and replaced by Kalman estimates.",
+          badge: "Verification Gate",
           isValidation: true,
         },
         {
           step: 5,
-          name: "CoT Streaming",
-          description: "Sanitized telemetry packaged into Cursor-on-Target XML packets.",
+          name: "Cursor-on-Target (CoT) Packets",
+          description: "Sanitized coordinates and heading packaged into military-standard CoT XML structures.",
         },
         {
           step: 6,
-          name: "WinTAK Map",
-          description: "Live spatial rendering of aircraft and target positions on tactical GIS displays.",
+          name: "WinTAK Live Map Broadcast",
+          description: "UDP multicast stream into WinTAK / ATAK, rendering real-time aircraft (EAGLE) and sensor footprint (CAMERA) positions.",
         },
       ],
     },
     reliabilityMechanism:
-      "Instead of attempting to make the OCR model perfectly accurate on noisy HUD footage, the system models the aircraft's physical motion with a Kalman filter. Each OCR observation is tested against an allowable prediction window. When the model outputs an impossible position (e.g. OCR character confusion due to glare), the reading is rejected and the system substitutes the calculated trajectory, elevating effective accuracy from ~80% to near 100%.",
+      "Instead of attempting to make the OCR model perfectly accurate on noisy HUD footage, the system models the aircraft's physical motion with a Kalman filter and enforces strict DMS coordinate geometry. Validated across 1,339 frames of real footage: 0 regressions on good reads, 32 of 33 damaged reads repaired, and genuinely unreadable frames safely refused rather than guessed. Positional accuracy jumped from ~80% to near 100%.",
     technicalDetails: [
-      "Extracted flight and sensor telemetry from FLIR HUD feeds at 50fps under strict latency constraints.",
-      "Engineered real-time Kalman filtering to model aircraft velocity and heading dynamics.",
-      "Implemented boundary-checking to instantly discard OCR noise and character misclassifications.",
-      "Integrated with the defense-standard Cursor-on-Target (CoT) protocol to broadcast telemetry into WinTAK.",
-      "Replaced 1–2 analyst-days of manual post-mission video review per flight with instant live map tracking.",
+      "Engineered recognition-only OCR over fixed coordinate ROIs, cutting inference latency by 4x (~2.2s down to ~0.57s).",
+      "Decoupled OCR compute into an independent OS process, preserving native video framerate playback without GIL bottlenecks.",
+      "Built a structural DMS repair parser recovering damaged degree symbols and dropped hemisphere letters (validated on 1,339 frames).",
+      "Integrated real-time Kalman filtering to dynamically compensate for glare anomalies and out-of-bounds readings.",
+      "Streamed sanitized telemetry into WinTAK over Cursor-on-Target (CoT) UDP multicast, saving 1–2 analyst-days of manual footage review per mission.",
     ],
     impact:
-      "Eliminated 1–2 analyst-days of manual post-mission footage review per flight while delivering seamless live tactical situational awareness without erratic map teleportation.",
+      "Eliminated 1–2 analyst-days of manual video review per flight while delivering seamless tactical situational awareness without erratic map teleportation.",
     technologies: [
       "Python",
       "Computer Vision",
       "OCR",
       "Kalman Filtering",
       "State Estimation",
+      "Multiprocessing",
       "Cursor-on-Target (CoT)",
-      "WinTAK",
-      "Real-Time Streaming",
+      "WinTAK / ATAK",
     ],
   },
   {
@@ -185,42 +185,42 @@ export const PROJECTS: Project[] = [
       { label: "Data Integrity", value: "Idempotent Upserts" },
     ],
     problem:
-      "Intelligence analysts spent hours daily manually triaging, reading, and organizing open-source intelligence (OSINT) across disparate news sources. The organization required an automated pipeline to feed articles into an LLM-powered RAG system without exposing sensitive collection queries or data to external third-party cloud APIs.",
+      "Intelligence analysts spent hours daily manually triaging, reading, and organizing open-source intelligence across disparate news sources. The agency required an automated pipeline to feed articles into an LLM-powered RAG system without exposing sensitive collection queries, endpoints, or intelligence data to external third-party cloud APIs.",
     architecture: {
       stages: [
         {
           step: 1,
           name: "Taranis Collection",
-          description: "Automated harvesting and triage of OSINT streams across media sources.",
+          description: "Automated harvesting and triage of OSINT streams across multiple media sources.",
         },
         {
           step: 2,
           name: "Cursor-Based Sync",
-          description: "Scheduled n8n orchestrator queries Taranis REST API with persistent cursor timestamps.",
+          description: "Scheduled n8n orchestrator queries Taranis REST API with persistent cursor timestamps to guarantee zero ingestion gaps.",
         },
         {
           step: 3,
           name: "Provenance & Normalization",
-          description: "Python code nodes standardize article bodies while preserving source metadata and timestamps.",
+          description: "Python code nodes standardize article bodies while preserving source metadata, authors, and timestamps through to retrieval.",
           badge: "Provenance Gate",
           isValidation: true,
         },
         {
           step: 4,
           name: "Idempotent Upsert",
-          description: "Persisted report-to-document ID map checks whether revisions exist; updates replace stale docs.",
+          description: "Persisted report-to-document ID mapping checks whether revisions exist; updates replace stale docs rather than duplicating vector embeddings.",
           badge: "Idempotency Layer",
           isValidation: true,
         },
         {
           step: 5,
           name: "Parse-Status Polling",
-          description: "RAGFlow ingestion polling confirms complete parsing and indexing before commit.",
+          description: "RAGFlow ingestion polling confirms complete parsing, OCR of attachments, and chunk indexing before commit.",
         },
         {
           step: 6,
           name: "Dedicated Error Workflow",
-          description: "Automated alert triggers upon parser failures, API timeouts, or schema mismatches.",
+          description: "Automated alert triggers upon parser failures, network timeouts, or schema mismatches, preventing silent ingestion failures.",
         },
       ],
     },
@@ -317,16 +317,16 @@ export const PROJECTS: Project[] = [
   {
     id: "ai-notetaker",
     title: "AI_NoteTaker — Agentic System with Enforced Safety Controls",
-    subtitle: "Conversational agent with deterministic confirmation loops and RRF hybrid retrieval",
+    subtitle: "Conversational agent with deterministic confirmation tokens and RRF hybrid retrieval",
     category: "LLM & Agent Systems",
     organization: "Independent System Implementation",
     period: "2026",
     githubUrl: "https://github.com/Yousof-Montasser/AI_NoteTaker",
     metrics: [
       { label: "Architecture", value: "Tool-Calling Loop" },
-      { label: "Safety Policy", value: "Deterministic Runtime" },
+      { label: "Safety Policy", value: "Cryptographic Token Gate" },
       { label: "Retrieval", value: "Hybrid FTS5 + Dense (RRF)" },
-      { label: "Packaging", value: "Docker Containerized" },
+      { label: "Unit & Eval Tests", value: "22 Unit + 15 Scenarios" },
     ],
     problem:
       "Most LLM agents rely entirely on prompt instructions to avoid destructive operations (such as deleting files or overwriting user notes). Prompt-based safety fails unpredictably under jailbreaks or model confusion. Furthermore, standard semantic search often fails on exact keyword identifiers, while BM25 fails on semantic concepts.",
@@ -334,48 +334,49 @@ export const PROJECTS: Project[] = [
       stages: [
         {
           step: 1,
-          name: "User Intent",
-          description: "Natural language query or instruction submitted to agent.",
+          name: "User Intent & REPL",
+          description: "Natural language query or command processed with sliding conversation window.",
         },
         {
           step: 2,
           name: "Agent Reasoning",
-          description: "LLM plans tool invocation via strictly typed schemas.",
+          description: "LLM plans tool invocation via strictly typed Pydantic parameter schemas.",
         },
         {
           step: 3,
-          name: "Safety Interceptor",
-          description: "Runtime code intercepts proposed tool call; checks for state mutation or deletion.",
-          badge: "Enforced Safety Gate",
+          name: "Deterministic Safety Gate",
+          description: "Mutations require exact note_id. Destructive actions return a one-time confirmation token rather than executing.",
+          badge: "Token-Enforced Gate",
           isValidation: true,
         },
         {
           step: 4,
-          name: "Two-Phase Confirmation",
-          description: "Destructive operations are halted until explicit user authorization is provided.",
-          badge: "Human-in-the-Loop",
+          name: "Two-Phase Redemption",
+          description: "Destructive change is applied only upon token redemption on a subsequent turn; the model cannot bypass confirmation.",
+          badge: "Deterministic Runtime",
           isValidation: true,
         },
         {
           step: 5,
-          name: "Hybrid Retrieval",
-          description: "Executes lexical SQLite FTS5 alongside dense sentence-transformer embeddings.",
+          name: "Multi-User Isolation",
+          description: "User identity is bound at store instantiation; user_id is excluded from tool args to prevent address spoofing.",
         },
         {
           step: 6,
-          name: "Reciprocal Rank Fusion",
-          description: "Fuses keyword precision and semantic similarity via RRF into balanced ranking.",
+          name: "Hybrid RRF Retrieval",
+          description: "Fuses SQLite FTS5 lexical ranking with local all-MiniLM-L6-v2 dense embeddings via Reciprocal Rank Fusion.",
         },
       ],
     },
     reliabilityMechanism:
-      "'The LLM proposes, the runtime enforces.' Destructive tool executions are intercepted by deterministic Python runtime rules before execution. Safety is guaranteed at the code level, not the prompt level. Tool schemas do two jobs: they guide the LLM and they police parameter boundaries. Retrieval utilizes Reciprocal Rank Fusion (RRF) to merge SQLite FTS5 keyword indexing with sentence-transformer embeddings, preventing semantic drift on exact terms.",
+      "'The LLM proposes, the runtime enforces.' Destructive tool executions return a confirmation token that must be redeemed on a subsequent turn. Safety is guaranteed at the code level, not the prompt level. Tool schemas do two jobs: they guide the LLM and they police parameter boundaries. Retrieval utilizes Reciprocal Rank Fusion (RRF) to merge SQLite FTS5 keyword indexing with sentence-transformer embeddings, preventing semantic drift on exact terms.",
     technicalDetails: [
-      "Engineered an agentic orchestration loop utilizing structured LLM tool-calling.",
-      "Implemented deterministic two-phase confirmation gates for all destructive and state-altering actions.",
-      "Designed hybrid retrieval fusing SQLite FTS5 BM25-style lexical search with dense vector embeddings.",
+      "Engineered an agentic orchestration loop utilizing structured LLM tool-calling with Pydantic validation.",
+      "Implemented token-based two-phase confirmation gates for note deletion and body removal.",
+      "Bound user identity directly to NoteStore instances to eliminate user-impersonation tool vectors.",
+      "Designed hybrid retrieval fusing SQLite FTS5 BM25-style lexical search with dense all-MiniLM-L6-v2 embeddings.",
       "Combined search results using Reciprocal Rank Fusion (RRF) for robust precision and recall balance.",
-      "Built a comprehensive automated test evaluation suite covering edge cases and safety compliance.",
+      "Built a comprehensive test suite (22 unit tests) and conversational evaluation runner (15 scripted multi-turn scenarios).",
       "Containerized complete application stack with Docker for reproducible zero-drift deployment.",
     ],
     impact:
@@ -384,11 +385,12 @@ export const PROJECTS: Project[] = [
       "Python",
       "LLM Tool-Calling",
       "Agent Orchestration",
+      "Pydantic",
       "SQLite FTS5",
       "Sentence-Transformers",
       "Reciprocal Rank Fusion (RRF)",
       "Docker",
-      "Unit & Eval Suites",
+      "Conversational Evals",
     ],
   },
   {
@@ -489,7 +491,7 @@ export const EXPERIENCES: ExperienceItem[] = [
     summary:
       "Designed and deployed production computer vision, telemetry extraction, and automated intelligence ingestion pipelines for critical operational workflows.",
     bulletPoints: [
-      "Architected and deployed Vantage, extracting FLIR HUD flight telemetry at 50fps using OCR with Kalman-based prediction compensation, lifting positional accuracy from 80% to ~100% and saving 1–2 analyst-days per mission.",
+      "Architected and deployed Vantage, extracting FLIR HUD flight telemetry at 50fps using OCR with Kalman-based prediction compensation, lifting positional accuracy from 80% to near 100% and saving 1–2 analyst-days per mission.",
       "Streamed parsed coordinates and heading into WinTAK via Cursor-on-Target (CoT) protocol for real-time mission map tracking.",
       "Engineered automated scheduled n8n ingestion pipeline ingesting 1,500–3,500 OSINT articles daily via Taranis REST API into self-hosted RAGFlow with cursor-based sync and idempotent upserts.",
       "Preserved source provenance through to retrieval and implemented parse-status polling and automated failure workflows fully on-premise.",
